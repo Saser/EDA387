@@ -1,10 +1,14 @@
 #include <errno.h>
 #include <libgen.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <sys/param.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "resolve.h"
 
@@ -20,7 +24,22 @@ int main(int argc, char* argv[]) {
         perror("Error resolving our hostname");
         exit(1);
     }
-    printf("Our hostname: `%s`\n", hostname);
+
+    struct addrinfo hints;
+    struct addrinfo *result;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_addr = NULL;
+    hints.ai_canonname = NULL;
+    hints.ai_next = NULL;
+
+    int gai_result = getaddrinfo(argv[1], NULL, &hints, &result);
+    if (gai_result != 0) {
+        printf("Error resolving '%s': %s\n", argv[1], gai_strerror(gai_result));
+        exit(2);
+    }
+    printf("I resolved something\n");
 }
 
 void print_usage(char *name) {
