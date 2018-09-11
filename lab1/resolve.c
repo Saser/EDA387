@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <arpa/inet.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
     struct addrinfo *result;
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
+    hints.ai_family = AF_UNSPEC;
     hints.ai_addr = NULL;
     hints.ai_canonname = NULL;
     hints.ai_next = NULL;
@@ -39,7 +40,35 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "Error resolving '%s': %s\n", argv[1], gai_strerror(gai_result));
         exit(2);
     }
-    printf("I resolved something\n");
+
+    int result_count = 0;
+    for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next) {
+        char address[rp->ai_addrlen];
+        void *addr_p = NULL;
+        if (rp->ai_family == AF_INET) {
+            addr_p = &((struct sockaddr_in *) rp->ai_addr)->sin_addr;
+        } else if (rp->ai_family == AF_INET6) {
+            addr_p = &((struct sockaddr_in6 *) rp->ai_addr)->sin6_addr;
+        } else {
+            fprintf(stderr, "Unknown address family: %d\n", rp->ai_family);
+            exit(3);
+        }
+
+        if (inet_ntop(rp->ai_family, addr_p, address, rp->ai_addrlen) == NULL) {
+            perror("Error converting address to string");
+            exit(4);
+        }
+
+        if (rp->ai_family == AF_INET) {
+            printf("IPv4 address: ");
+        } else {
+            printf("IPv6 address: ");
+        }
+        printf("%s\n", address);
+
+        result_count += 1;
+    }
+    printf("got a total of %d results\n", result_count);
 }
 
 void print_usage(char *name) {
