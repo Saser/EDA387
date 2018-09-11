@@ -19,8 +19,8 @@ int main(int argc, char* argv[]) {
         exit(1);
     }
 
-    char hostname[HOST_NAME_MAX];
-    if (gethostname(hostname, HOST_NAME_MAX) != 0) {
+    char hostname[HOST_NAME_MAX + 1];
+    if (gethostname(hostname, HOST_NAME_MAX + 1) != 0) {
         perror("Error resolving our hostname");
         exit(1);
     }
