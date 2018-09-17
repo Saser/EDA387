@@ -17,13 +17,13 @@ int main(int argc, char* argv[]) {
     if (argc != 2) {
         fprintf(stderr, "Wrong number of arguments.\n");
         print_usage(argv[0]);
-        exit(1);
+        return 1;
     }
 
     char hostname[HOST_NAME_MAX + 1];
     if (gethostname(hostname, HOST_NAME_MAX + 1) != 0) {
         perror("Error resolving our hostname");
-        exit(1);
+        return 1;
     }
 
     struct addrinfo hints;
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     int gai_result = getaddrinfo(argv[1], NULL, &hints, &result);
     if (gai_result != 0) {
         fprintf(stderr, "Error resolving '%s': %s\n", argv[1], gai_strerror(gai_result));
-        exit(2);
+        return 2;
     }
 
     int result_count = 0;
@@ -53,12 +53,12 @@ int main(int argc, char* argv[]) {
             addr_p = &((struct sockaddr_in6 *) rp->ai_addr)->sin6_addr;
         } else {
             fprintf(stderr, "Unknown address family: %d\n", rp->ai_family);
-            exit(3);
+            return 3;
         }
 
         if (inet_ntop(rp->ai_family, addr_p, address, rp->ai_addrlen) == NULL) {
             perror("Error converting address to string");
-            exit(4);
+            return 4;
         }
 
         if (rp->ai_family == AF_INET) {
