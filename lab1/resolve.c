@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
         result_count += 1;
     }
     printf("got a total of %d results\n", result_count);
+    freeaddrinfo(result);
 }
 
 void print_usage(char *name) {
