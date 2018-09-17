@@ -45,7 +45,8 @@ int main(int argc, char* argv[]) {
 
     int result_count = 0;
     for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next) {
-        char address[rp->ai_addrlen];
+        int address_size = INET6_ADDRSTRLEN;
+        char address[address_size];
         void *addr_p = NULL;
         if (rp->ai_family == AF_INET) {
             addr_p = &((struct sockaddr_in *) rp->ai_addr)->sin_addr;
@@ -56,7 +57,7 @@ int main(int argc, char* argv[]) {
             return 3;
         }
 
-        if (inet_ntop(rp->ai_family, addr_p, address, rp->ai_addrlen) == NULL) {
+        if (inet_ntop(rp->ai_family, addr_p, address, address_size) == NULL) {
             perror("Error converting address to string");
             return 4;
         }
