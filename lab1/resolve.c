@@ -11,7 +11,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "resolve.h"
+void print_usage(char *name);
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
