@@ -5,3 +5,6 @@ server: server-iterative.cpp
 
 client-simple: client-simple.cpp
 	g++ $(FLAGS) $^ -o $@
+
+client-multi: client-multi.cpp
+	g++ $(FLAGS) $^ -o $@
