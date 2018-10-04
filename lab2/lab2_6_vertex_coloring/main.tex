@@ -2,8 +2,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{amsmath}
 
-\title{EDA387 Computer Networks\\Lab 2.6 -- Vertex Coloring}
+\title{EDA387 Computer Networks\\Lab 2.6 -- Vertex Coluring}
 \author{Andréas Erlandsson, Christian Persson\\\it{Group CompNet\_39} }
 \date{October 2018}
 
@@ -12,11 +13,18 @@
 \maketitle
 
 \section*{Assumptions}
+\begin{itemize}
+    \item The ring contains $n$ processors.
+    \item No globally unique processor identifiers.
+    \item Asynchronous shared memory system with read/write atomicity, meaning only one processor can perform a computation step (internal computation plus a single I/O operations) at a time.
+    \item Each processor $p_i$ has a register $r_i$ that can hold the values $0$, $1$, and $2$. Trying to assign a value that is less than $0$ will result in the value $0$ being a signed, and similarly for a value that is greater than $2$. 
+\end{itemize}
 
 \section*{Algorithm}
+First, we note that the optimal solution is either 2 or 3 colours (for $n > 1$), depending on whether $n$ is even or odd, respectively. This can be trivially seen, so we do not prove it. The algorithm makes use of this fact, and we later prove that the algorithm produces a solution with an optimal number of colours.
 
 \begin{algorithm}
-    \caption{asdfasdf}
+    \caption{Vertex Colouring on circle}
     Root processor ($i = 0$):
     \begin{algorithmic}[1]
         \While {true}
@@ -39,10 +47,13 @@
 
 \section*{Proofs}
 
+\paragraph{Definition of safe configuration.}
+A safe configuration for the task $VC$ (Vertex Colouring) and our algorithm is a configuration $c$ in which each processor $p_i$ has its shared register $r_i$ set to a value that is different from $r_{i + 1 \mod n}$. Furthermore, we require that $r_0 > 0$, and $r_i < 2$ for $i \neq 0$.
+
 \subsection*{Proof of convergence}
 Suppose that $n$ is the number of processors in the ring. Recall that the registers can only hold the values $0$, $1$, or $2$. After $1$ asynchronous cycle, the root processor ($p_0$) will have read the value of $r_{n - 1}$, and written either $1$ or $2$ to $r_0$. (Recall that we assumed that trying to write a value larger than $2$ to a register would cause $2$ to be written.) In other words, after 1 asynchronous cycle, $r_0$ is guaranteed to always contain a value that is greater than $0$.
 
-We can prove the convergence requirement by doing coarse-of-values proof of induction over the number of asynchronous cycles that has passed after the first asynchronous cycle (see above). We state the induction predicate $P(k)$ as follows: ``after $k$ asynchronous cycles, each processor $p_i = p_1, \ldots, p_k$ has a different color than processor $p_{i - 1}$ (i.e. $r_i \neq r_{i -1 }$), and $r_i$ will never change''.
+We can prove the convergence requirement by doing coarse-of-values proof of induction over the number of asynchronous cycles that has passed after the first asynchronous cycle (see above). We state the induction predicate $P(k)$ as follows: ``after $k$ asynchronous cycles, each processor $p_i = p_1, \ldots, p_k$ has a different colour than processor $p_{i - 1}$ (i.e. $r_i \neq r_{i -1 }$), and $r_i$ will never change''.
 
 \emph{(In the following paragraphs, when we write e.g. ``$4$ asynchronous cycles'', we actually mean $4 + 1$ asynchronous cycles, but we do not write out the $+ 1$.)}
 
@@ -60,11 +71,14 @@ The above proof only concerns the non-root processors $p_1, \ldots, p_{n - 1}$. 
 We can see that after $n - 1$ asynchronous cycles (which is actually $n$ asynchronous cycles, if the first cycle where $p_0$ writes $r_0 > 0$ is included), $r_{n - 1}$ has either the value $0$ or $1$. Then, after $n$ asynchronous cycles, $r_0$ has either the value $1$ or the value $2$, and $r_0 \neq r_{n - 1}$, since $r_0 = r_{n - 1} + 1$, and we conclude that we are in a safe configuration.
 
 \subsection*{Proof of closure}
-Suppose that we have an execution $E = E'E''$ of the algorithm that started in an arbitrary configuration. Above we proved that the values of $r_k$ for any processor $p_k$ never changes after a total of $k + 1$ asynchronous cycles, we also know that the values of $lr_{k}$ will never change either, and $lr_k = r_k$. Since we have proved that the algorithm converges towards a safe configuration, let $E'$ be the prefix of $E$ in which the algorithm converges, so that the configuration $c$ is the first configuration of $E''$, and also the first safe configuration with respect to the vertex coloring task and our algorithm. Suppose that processor $p_i$ is the next to take a computation step, bringing the state of the system to configuration $c'_1$. If $p_i$ reads from $r_{i - 1}$, the value of $lr_{i - 1}$ is unchanged, and we conclude that $c'_1$ is a safe configuration. Similarly, if $p_i$ writes to $r_i$, bringing the system to configuration $c'_2$, we know that the value of $r_i$ will be unchanged, and we conclude that $c'_2$ is a safe configuration. We can then conclude that once the algorithm has converged to a safe configuration $c$, any execution starting in $c$ will be a legal execution.
+Suppose that we have an execution $E = E'E''$ of the algorithm that started in an arbitrary configuration. Above we proved that the values of $r_k$ for any processor $p_k$ never changes after a total of $k + 1$ asynchronous cycles, we also know that the values of $lr_{k}$ will never change either, and $lr_k = r_k$. Since we have proved that the algorithm converges towards a safe configuration, let $E'$ be the prefix of $E$ in which the algorithm converges, so that the configuration $c$ is the first configuration of $E''$, and also the first safe configuration with respect to the vertex colouring task and our algorithm. Suppose that processor $p_i$ is the next to take a computation step, bringing the state of the system to configuration $c'_1$. If $p_i$ reads from $r_{i - 1}$, the value of $lr_{i - 1}$ is unchanged, and we conclude that $c'_1$ is a safe configuration. Similarly, if $p_i$ writes to $r_i$, bringing the system to configuration $c'_2$, we know that the value of $r_i$ will be unchanged, and we conclude that $c'_2$ is a safe configuration. We can then conclude that once the algorithm has converged to a safe configuration $c$, any execution starting in $c$ will be a legal execution.
 
 \subsection*{Stabilization period and optimality.}
 Using the above reasoning, we have therefore acquired a \textbf{bound of the stabilization period}, which is a total of $n + 1$ asynchronous cycles (including the first asynchronous cycle, after which $r_0 > 0$).
 
-We can also fairly easily prove the optimality of the algorithm, i.e. prove that an optimal number of colors are used. Suppose that $n$ is even, meaning that $n - 1$ is odd. We saw above that $r_i = 0$ if $i$ is odd, so we know that after a total of $n + 1$ asynchronous cycles $r_{n - 1} = 0$. This means that $r_0 = 1$, and so the only colors used by the processors are the colors $0$ and $1$ (since the non-root processors only use those colors), which is the optimal solution for an even number of processors. Similarly, if $n$ is odd, then $n - 1$ is even and $r_{n - 1} = 1$. This means that $r_0 = 2$, and so the colors $0$, $1$, and $2$ are used, which is the optimal solution for an odd number of processors. We can then conclude that our algorithm \textbf{uses an optimal number of colors}.
+We can also fairly easily prove the optimality of the algorithm, i.e. prove that an optimal number of colours are used. Suppose that $n$ is even, meaning that $n - 1$ is odd. We saw above that $r_i = 0$ if $i$ is odd, so we know that after a total of $n + 1$ asynchronous cycles $r_{n - 1} = 0$. This means that $r_0 = 1$, and so the only colours used by the processors are the colours $0$ and $1$ (since the non-root processors only use those colours), which is the optimal solution for an even number of processors. Similarly, if $n$ is odd, then $n - 1$ is even and $r_{n - 1} = 1$. This means that $r_0 = 2$, and so the colours $0$, $1$, and $2$ are used, which is the optimal solution for an odd number of processors. We can then conclude that our algorithm \textbf{uses an optimal number of colours}.
+
+\subsection*{Number of states in processor as state machine}
+We assume the state of a processor consist of the two registers, $r_i$ and $lr_{i-1}$, which each has $3$ different possible values $(0, 1, 2)$ and thus we have $3^2 = 9$ states for each processor.
 
 \end{document}
