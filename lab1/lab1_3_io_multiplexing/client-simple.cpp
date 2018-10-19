@@ -352,4 +352,4 @@ static double get_time_stamp()
 #	endif // platform
 #endif // MEASURE_ROUND_TRIP_TIME
 
-//--///}}}1//////////////// vim:syntax=cpp:foldmethod=marker:ts=4:noexpandtab: 
+//--///}}}1//////////////// vim:syntax=cpp:ts=4:noexpandtab:

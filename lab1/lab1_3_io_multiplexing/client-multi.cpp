@@ -24,7 +24,7 @@
 //--//////////////////////////////////////////////////////////////////////////
 //--    configurables       ///{{{1///////////////////////////////////////////
 
-// Set VERBOSE to 0 to suppress non-essential output. 
+// Set VERBOSE to 0 to suppress non-essential output.
 #define VERBOSE 0
 
 // Verify that the message received from the server is equal to the one
@@ -34,7 +34,7 @@
 // Measure time taken to establish a connection
 #define MEASURE_CONNECT_TIME 1
 
-// Measure round trip time. 
+// Measure round trip time.
 #define MEASURE_ROUND_TRIP_TIME 1
 
 // Set TCPNODELAY in connect_to_server()
@@ -47,7 +47,7 @@ const size_t kConnectionBufferSize = 256;
 
 //--    constants           ///{{{1///////////////////////////////////////////
 
-/* Connection States. 
+/* Connection States.
  */
 enum EConnState
 {
@@ -63,7 +63,7 @@ enum EConnState
  */
 struct ConnectionData
 {
-	EConnState state; 
+	EConnState state;
 
 	// socket fd
 	int sock;
@@ -90,7 +90,7 @@ struct ConnectionData
 
 //--    global state        ///{{{1///////////////////////////////////////////
 
-// Message sent by client. 
+// Message sent by client.
 static const char* g_clientMessage = "client%d";
 
 //--    prototypes          ///{{{1///////////////////////////////////////////
@@ -109,7 +109,7 @@ static bool client_process_recv( size_t cid, ConnectionData& cd );
  */
 static bool resolve_address( sockaddr_in& sa, const char* host, const char* port );
 
-/* Initiates connection to the address specified in `sa'. The socket is put 
+/* Initiates connection to the address specified in `sa'. The socket is put
  * into non-blocking mode before the call to connect() - to use the connection,
  * wait until the socket is ready for writing and then retrieve the status with
  * getsockopt() / SO_ERROR.
@@ -139,11 +139,11 @@ int main( int argc, char* argv[] )
 	// get program arguments (server address and port)
 	if( argc < 4 || argc > 6 )
 	{
-		fprintf( stderr, "Error %s arguments\n", 
-			argc < 4 ? "insufficient":"too many" 
+		fprintf( stderr, "Error %s arguments\n",
+			argc < 4 ? "insufficient":"too many"
 		);
-		fprintf( stderr, "  synopsis: %s <server> <port> <#num> [<#rep>] [<msg>]\n", 
-			argv[0] 
+		fprintf( stderr, "  synopsis: %s <server> <port> <#num> [<#rep>] [<msg>]\n",
+			argv[0]
 		);
 		fprintf( stderr, "    - <#num> -- number of clients to be emulated\n" );
 		fprintf( stderr, "    - <#rep> -- number of times message is sent\n" );
@@ -195,7 +195,7 @@ int main( int argc, char* argv[] )
 
 		// initialize client aux. data
 		connections[i].repeatsLeft = numRepeats-1;
-	
+
 #		if MEASURE_ROUND_TRIP_TIME
 		connections[i].roundTripEnd = connections[i].roundTripStart = -1.0;
 #		endif
@@ -219,7 +219,7 @@ int main( int argc, char* argv[] )
 		}
 	}
 
-	printf( "  successfully initiated %zu connection attempts!\n", 
+	printf( "  successfully initiated %zu connection attempts!\n",
 		numClients-connErrors );
 
 	// event handling loop
@@ -230,7 +230,7 @@ int main( int argc, char* argv[] )
 		int maxfd = 0;
 		fd_set rset, wset;
 
-		FD_ZERO( &rset ); 
+		FD_ZERO( &rset );
 		FD_ZERO( &wset );
 
 		// put active clients into their respective sets
@@ -313,7 +313,7 @@ int main( int argc, char* argv[] )
 				++erroredItems;
 				continue;
 			}
-			
+
 			double delta = connections[i].connectEnd - connections[i].connectStart;
 
 			minTime = std::min( delta, minTime );
@@ -322,7 +322,7 @@ int main( int argc, char* argv[] )
 			++timedItems;
 
 #		if VERBOSE
-			printf( "  - conn %zu : connect time = %f ms\n", 
+			printf( "  - conn %zu : connect time = %f ms\n",
 				i, delta*1e3 );
 #		endif
 		}
@@ -347,7 +347,7 @@ int main( int argc, char* argv[] )
 		for( size_t i = 0; i < numClients; ++i )
 		{
 			if( connections[i].roundTripEnd < 0.0 ) continue;
-			
+
 			double delta = connections[i].roundTripEnd - connections[i].roundTripStart;
 
 			minTime = std::min( delta, minTime );
@@ -356,7 +356,7 @@ int main( int argc, char* argv[] )
 			++timedItems;
 
 #		if VERBOSE
-			printf( "  - conn %zu : round trip time = %f ms for %zu round trips\n", 
+			printf( "  - conn %zu : round trip time = %f ms for %zu round trips\n",
 				i, delta*1e3, numRepeats );
 #		endif
 		}
@@ -370,13 +370,13 @@ int main( int argc, char* argv[] )
 		printf( "  - average time: %f ms\n", avgTime*1e3 );
 	}
 #	endif
-	
+
 	// clean up
 	for( size_t i = 0; i < numClients; ++i )
 		close( connections[i].sock );
 
 	delete [] connections;
-	
+
 	return 0;
 }
 
@@ -403,7 +403,7 @@ static bool client_process_send( size_t cid, ConnectionData& cd )
 
 		if( 0 != error )
 		{
-			fprintf( stderr, "  - conn %zu : async connect() error: %s\n", 
+			fprintf( stderr, "  - conn %zu : async connect() error: %s\n",
 				cid, strerror(error)
 			);
 			return false;
@@ -430,16 +430,16 @@ static bool client_process_send( size_t cid, ConnectionData& cd )
 	}
 
 	// send as much data as possible
-	int ret = send( cd.sock, 
-		cd.buffer+cd.bufferOffset, 
+	int ret = send( cd.sock,
+		cd.buffer+cd.bufferOffset,
 		cd.bufferSize-cd.bufferOffset,
 		MSG_NOSIGNAL
 	);
 
 	if( ret == -1 )
 	{
-		fprintf( stderr, "  - conn %zu : send() error: %s\n", 
-			cid, strerror(errno) 
+		fprintf( stderr, "  - conn %zu : send() error: %s\n",
+			cid, strerror(errno)
 		);
 		return false;
 	}
@@ -485,7 +485,7 @@ static bool client_process_recv( size_t cid, ConnectionData& cd )
 	}
 	if( -1 == ret )
 	{
-		fprintf( stderr, "  - conn %zu : error in recv() : %s\n", 
+		fprintf( stderr, "  - conn %zu : error in recv() : %s\n",
 			cid, strerror(errno) );
 		return false;
 	}
@@ -551,20 +551,20 @@ static bool resolve_address( sockaddr_in& sa, const char* host, const char* port
 
 	addrinfo* result = 0;
 	int ret = getaddrinfo( host, port, &hints, &result );
-	
+
 	if( 0 != ret )
 	{
 		fprintf( stderr, "Error - cannot resolve address: %s\n",
-			gai_strerror(ret) 
+			gai_strerror(ret)
 		);
 
 		return false;
 	}
-	
+
 	bool ok = false;
 	for( addrinfo* res = result; res; res = res->ai_next )
 	{
-		if( res->ai_family == AF_INET 
+		if( res->ai_family == AF_INET
 			&& res->ai_addrlen == sizeof(sockaddr_in) )
 		{
 			ok = true;
@@ -589,7 +589,7 @@ static int connect_to_server_nonblock( const sockaddr_in& sa )
 {
 	// allocate socket
 	int fd = socket( AF_INET, SOCK_STREAM, 0 );
-	
+
 	if( -1 == fd )
 	{
 		perror( "socket() failed" );
@@ -642,7 +642,7 @@ static int connect_to_server_nonblock( const sockaddr_in& sa )
 
 //--    timing code         ///{{{1///////////////////////////////////////////
 
-/* Note: timer code implementations are provided for Linux, Mac OS X and 
+/* Note: timer code implementations are provided for Linux, Mac OS X and
  * Windows. If you're running this on a different platform, you'll probably
  * have to write your own code.
  *
@@ -664,7 +664,7 @@ static double get_time_stamp()
 	timespec currentTime;
 	clock_gettime( CLOCK_REALTIME, &currentTime );
 
-	return (currentTime.tv_sec - initTime.tv_sec) + 
+	return (currentTime.tv_sec - initTime.tv_sec) +
 		1e-9*(currentTime.tv_nsec - initTime.tv_nsec);
 }
 
@@ -713,4 +713,4 @@ static double get_time_stamp()
 #	endif // platform
 #endif // MEASURE_ROUND_TRIP_TIME || MEASURE_CONNECT_TIME
 
-//--///}}}1//////////////// vim:syntax=cpp:foldmethod=marker:ts=4:noexpandtab: 
+//--///}}}1//////////////// vim:syntax=cpp:ts=4:noexpandtab:
