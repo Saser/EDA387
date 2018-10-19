@@ -82,8 +82,8 @@ int main( int argc, char* argv[] )
 	if( argc != 3 )
 	{
 		fprintf( stderr, "Error %s arguments\n", 
-			argc < 3 ? "insufficient":"too many" 
-		);
+				argc < 3 ? "insufficient":"too many" 
+			   );
 		fprintf( stderr, "  usage: %s <server> <port>\n", argv[0] );
 		return 1;
 	}
@@ -133,10 +133,10 @@ int main( int argc, char* argv[] )
 		{
 			ssize_t offset = inputLength - remaining;
 			ssize_t ret = send( connfd, 
-				inputBuffer+offset, 
-				remaining,
-				MSG_NOSIGNAL
-			);
+					inputBuffer+offset, 
+					remaining,
+					MSG_NOSIGNAL
+					);
 
 			if( -1 == ret )
 			{
@@ -156,10 +156,10 @@ int main( int argc, char* argv[] )
 		while( received < expected )
 		{
 			ssize_t ret = recv( connfd,
-				recvBuffer + received,
-				expected-received,
-				0
-			);
+					recvBuffer + received,
+					expected-received,
+					0
+					);
 
 			if( 0 == ret )
 			{
@@ -187,12 +187,12 @@ int main( int argc, char* argv[] )
 		printf( "Response = `%s'\n", recvBuffer );
 #		if VERIFY_MESSAGE
 		bool match = 0 == strncmp( inputBuffer, recvBuffer, 
-			std::min( kInputBufferSize, kReceiveBufferSize )
-		);
+				std::min( kInputBufferSize, kReceiveBufferSize )
+				);
 
 		printf( "  - response does %smatch original query\n",
-			match ? "" : "NOT "
-		);
+				match ? "" : "NOT "
+			  );
 #		endif
 #		if MEASURE_ROUND_TRIP_TIME
 		printf( "  - round trip time is %f ms\n", (endTime-startTime)*1e3 );
@@ -223,21 +223,21 @@ static int connect_to_server( const char* addr, const char* port )
 
 		addrinfo* result = 0;
 		int ret = getaddrinfo( addr, port, &hints, &result );
-		
+
 		if( 0 != ret )
 		{
 			fprintf( stderr, "Error - cannot resolve address: %s\n",
-				gai_strerror(ret) 
-			);
+					gai_strerror(ret) 
+				   );
 
 			return -1;
 		}
-		
+
 		bool ok = false;
 		for( addrinfo* res = result; res; res = res->ai_next )
 		{
 			if( res->ai_family == AF_INET 
-				&& res->ai_addrlen == sizeof(sockaddr_in) )
+					&& res->ai_addrlen == sizeof(sockaddr_in) )
 			{
 				ok = true;
 				memcpy( &servAddr, res->ai_addr, sizeof(sockaddr_in) );
@@ -256,7 +256,7 @@ static int connect_to_server( const char* addr, const char* port )
 
 	// allocate socket
 	int fd = socket( AF_INET, SOCK_STREAM, 0 );
-	
+
 	if( -1 == fd )
 	{
 		perror( "socket() failed" );

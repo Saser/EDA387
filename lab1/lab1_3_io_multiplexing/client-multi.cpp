@@ -48,7 +48,7 @@ const size_t kConnectionBufferSize = 256;
 //--    constants           ///{{{1///////////////////////////////////////////
 
 /* Connection States.
- */
+*/
 enum EConnState
 {
 	eConnStateConnecting, // async connect() issued, but not yet done
@@ -60,7 +60,7 @@ enum EConnState
 //--    structures          ///{{{1///////////////////////////////////////////
 
 /* Per-connection data
- */
+*/
 struct ConnectionData
 {
 	EConnState state;
@@ -96,10 +96,10 @@ static const char* g_clientMessage = "client%d";
 //--    prototypes          ///{{{1///////////////////////////////////////////
 
 /* Process client that is ready for writing.
- */
+*/
 static bool client_process_send( size_t cid, ConnectionData& cd );
 /* Process client that is ready for sending.
- */
+*/
 static bool client_process_recv( size_t cid, ConnectionData& cd );
 
 /* Resolves/parses address given by `host' and `port', and initializes the
@@ -140,11 +140,11 @@ int main( int argc, char* argv[] )
 	if( argc < 4 || argc > 6 )
 	{
 		fprintf( stderr, "Error %s arguments\n",
-			argc < 4 ? "insufficient":"too many"
-		);
+				argc < 4 ? "insufficient":"too many"
+			   );
 		fprintf( stderr, "  synopsis: %s <server> <port> <#num> [<#rep>] [<msg>]\n",
-			argv[0]
-		);
+				argv[0]
+			   );
 		fprintf( stderr, "    - <#num> -- number of clients to be emulated\n" );
 		fprintf( stderr, "    - <#rep> -- number of times message is sent\n" );
 		fprintf( stderr, "    - <msg> -- message sent by clients (see below)\n" );
@@ -220,7 +220,7 @@ int main( int argc, char* argv[] )
 	}
 
 	printf( "  successfully initiated %zu connection attempts!\n",
-		numClients-connErrors );
+			numClients-connErrors );
 
 	// event handling loop
 	size_t clientsAlive = numClients - connErrors;
@@ -323,14 +323,14 @@ int main( int argc, char* argv[] )
 
 #		if VERBOSE
 			printf( "  - conn %zu : connect time = %f ms\n",
-				i, delta*1e3 );
+					i, delta*1e3 );
 #		endif
 		}
 
 		avgTime /= timedItems;
 
 		printf( "Connect timing results for %zu successful connections\n",
-			timedItems );
+				timedItems );
 		printf( "  - min time: %f ms\n", minTime*1e3 );
 		printf( "  - max time: %f ms\n", maxTime*1e3 );
 		printf( "  - average time: %f ms\n", avgTime*1e3 );
@@ -357,14 +357,14 @@ int main( int argc, char* argv[] )
 
 #		if VERBOSE
 			printf( "  - conn %zu : round trip time = %f ms for %zu round trips\n",
-				i, delta*1e3, numRepeats );
+					i, delta*1e3, numRepeats );
 #		endif
 		}
 
 		avgTime /= timedItems;
 
 		printf( "Roundtrip timing results for %zu connections for %zu round trips\n",
-			timedItems, numRepeats );
+				timedItems, numRepeats );
 		printf( "  - min time: %f ms\n", minTime*1e3 );
 		printf( "  - max time: %f ms\n", maxTime*1e3 );
 		printf( "  - average time: %f ms\n", avgTime*1e3 );
@@ -404,8 +404,8 @@ static bool client_process_send( size_t cid, ConnectionData& cd )
 		if( 0 != error )
 		{
 			fprintf( stderr, "  - conn %zu : async connect() error: %s\n",
-				cid, strerror(error)
-			);
+					cid, strerror(error)
+				   );
 			return false;
 		}
 
@@ -431,16 +431,16 @@ static bool client_process_send( size_t cid, ConnectionData& cd )
 
 	// send as much data as possible
 	int ret = send( cd.sock,
-		cd.buffer+cd.bufferOffset,
-		cd.bufferSize-cd.bufferOffset,
-		MSG_NOSIGNAL
-	);
+			cd.buffer+cd.bufferOffset,
+			cd.bufferSize-cd.bufferOffset,
+			MSG_NOSIGNAL
+			);
 
 	if( ret == -1 )
 	{
 		fprintf( stderr, "  - conn %zu : send() error: %s\n",
-			cid, strerror(errno)
-		);
+				cid, strerror(errno)
+			   );
 		return false;
 	}
 
@@ -473,10 +473,10 @@ static bool client_process_recv( size_t cid, ConnectionData& cd )
 
 	// receive all available data
 	int ret = recv( cd.sock,
-		cd.buffer+cd.bufferOffset,
-		cd.expectedSize - cd.bufferOffset,
-		0
-	);
+			cd.buffer+cd.bufferOffset,
+			cd.expectedSize - cd.bufferOffset,
+			0
+			);
 
 	if( 0 == ret )
 	{
@@ -486,7 +486,7 @@ static bool client_process_recv( size_t cid, ConnectionData& cd )
 	if( -1 == ret )
 	{
 		fprintf( stderr, "  - conn %zu : error in recv() : %s\n",
-			cid, strerror(errno) );
+				cid, strerror(errno) );
 		return false;
 	}
 
@@ -555,8 +555,8 @@ static bool resolve_address( sockaddr_in& sa, const char* host, const char* port
 	if( 0 != ret )
 	{
 		fprintf( stderr, "Error - cannot resolve address: %s\n",
-			gai_strerror(ret)
-		);
+				gai_strerror(ret)
+			   );
 
 		return false;
 	}
@@ -565,7 +565,7 @@ static bool resolve_address( sockaddr_in& sa, const char* host, const char* port
 	for( addrinfo* res = result; res; res = res->ai_next )
 	{
 		if( res->ai_family == AF_INET
-			&& res->ai_addrlen == sizeof(sockaddr_in) )
+				&& res->ai_addrlen == sizeof(sockaddr_in) )
 		{
 			ok = true;
 			memcpy( &sa, res->ai_addr, sizeof(sockaddr_in) );

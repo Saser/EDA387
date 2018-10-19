@@ -180,10 +180,10 @@ int main( int argc, char* argv[] )
 		// print some information about the new client
 		char buff[128];
 		printf( "Connection from %s:%d -> socket %d\n",
-			inet_ntop( AF_INET, &clientAddr.sin_addr, buff, sizeof(buff) ),
-			ntohs(clientAddr.sin_port),
-			clientfd
-		);
+				inet_ntop( AF_INET, &clientAddr.sin_addr, buff, sizeof(buff) ),
+				ntohs(clientAddr.sin_port),
+				clientfd
+			  );
 		fflush( stdout );
 #			endif
 
@@ -246,7 +246,7 @@ static bool process_client_recv( ConnectionData& cd )
 	{
 #		if VERBOSE
 		printf( "  socket %d - error on receive: '%s'\n", cd.sock,
-			strerror(errno) );
+				strerror(errno) );
 		fflush( stdout );
 #		endif
 
@@ -272,16 +272,16 @@ static bool process_client_send( ConnectionData& cd )
 
 	// send as much data as possible from buffer
 	ssize_t ret = send( cd.sock,
-		cd.buffer+cd.bufferOffset,
-		cd.bufferSize-cd.bufferOffset,
-		MSG_NOSIGNAL // suppress SIGPIPE signals, generate EPIPE instead
-	);
+			cd.buffer+cd.bufferOffset,
+			cd.bufferSize-cd.bufferOffset,
+			MSG_NOSIGNAL // suppress SIGPIPE signals, generate EPIPE instead
+			);
 
 	if( -1 == ret )
 	{
 #		if VERBOSE
 		printf( "  socket %d - error on send: '%s'\n", cd.sock,
-			strerror(errno) );
+				strerror(errno) );
 		fflush( stdout );
 #		endif
 
@@ -343,9 +343,9 @@ static int setup_server_socket( short port )
 
 	char actualBuff[128];
 	printf( "Socket is bound to %s %d\n",
-		inet_ntop( AF_INET, &actualAddr.sin_addr, actualBuff, sizeof(actualBuff) ),
-		ntohs(actualAddr.sin_port)
-	);
+			inet_ntop( AF_INET, &actualAddr.sin_addr, actualBuff, sizeof(actualBuff) ),
+			ntohs(actualAddr.sin_port)
+		  );
 
 	// and start listening for incoming connections
 	if( -1 == listen( fd, kServerBacklog ) )
