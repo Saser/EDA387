@@ -168,13 +168,30 @@ int main( int argc, char* argv[] )
 	while( 1 )
 	{
 		fd_set readfds;
+		fd_set writefds;
 		FD_ZERO(&readfds);
+		FD_ZERO(&writefds);
+
 		FD_SET(listenfd, &readfds);
 		int maxfd = listenfd;
-		int retval = select(maxfd + 1,  &readfds, NULL, NULL, NULL);
+
+		for (size_t i = 0; i < connections.size(); i++) {
+			ConnectionData cd = connections[i];
+			int sockfd = cd.sock;
+			maxfd = sockfd > maxfd ? sockfd : maxfd;
+			fd_set *set;
+			if (cd.state == eConnStateReceiving) {
+				set = &readfds;
+			} else {
+				set = &writefds;
+			}
+			FD_SET(sockfd, set);
+		}
+
+		int retval = select(maxfd + 1,  &readfds, &writefds, NULL, NULL);
 		if (retval == -1) {
 			perror("select() failed");
-			continue;
+			return 1;
 		}
 
 		if (FD_ISSET(listenfd, &readfds)) {
@@ -182,21 +199,30 @@ int main( int argc, char* argv[] )
 				continue;
 			}
 		}
-		/* // Repeatedly receive and re-send data from the connection. When */
-		/* // the connection closes, process_client_*() will return false, no */
-		/* // further processing is done. */
-		/* bool processFurther = true; */
-		/* while( processFurther ) */
-		/* { */
-		/* 	while( processFurther && connData.state == eConnStateReceiving ) */
-		/* 		processFurther = process_client_recv( connData ); */
 
-		/* 	while( processFurther && connData.state == eConnStateSending ) */
-		/* 		processFurther = process_client_send( connData ); */
-		/* } */
+		for (size_t i = 0; i < connections.size(); i++) {
+			ConnectionData *cd = &connections[i];
+			int sockfd = cd->sock;
+			bool processFurther;
+			if (cd->state == eConnStateReceiving && FD_ISSET(sockfd, &readfds)) {
+				processFurther = process_client_recv(*cd);
+			} else if (cd->state == eConnStateSending && FD_ISSET(sockfd, &writefds)) {
+				processFurther = process_client_send(*cd);
+			} else {
+				continue;
+			}
 
-		/* // done - close connection */
-		/* close( connData.sock ); */
+			if (!processFurther) {
+				close(sockfd);
+				cd->sock = -1;
+			}
+		}
+
+		connections.erase(
+				std::remove_if(connections.begin(), connections.end(), &is_invalid_connection),
+				connections.end()
+		);
+
 	}
 
 	// The program will never reach this part, but for demonstration purposes,
