@@ -93,6 +93,8 @@ struct ConnectionData
 
 //--    prototypes          ///{{{1///////////////////////////////////////////
 
+static bool accept_connection(int listenfd, std::vector<ConnectionData>& connections);
+
 /* Receive data and place it in the connection's buffer.
  *
  * Requires that ConnectionData::state is eConnStateReceiving; if not, an
@@ -157,6 +159,7 @@ int main( int argc, char* argv[] )
 
 	// set up listening socket - see setup_server_socket() for details.
 	int listenfd = setup_server_socket( serverPort );
+	std::vector<ConnectionData> connections {};
 
 	if( -1 == listenfd )
 		return 1;
@@ -164,57 +167,36 @@ int main( int argc, char* argv[] )
 	// loop forever
 	while( 1 )
 	{
-		sockaddr_in clientAddr;
-		socklen_t addrSize = sizeof(clientAddr);
-
-		// accept a single incoming connection
-		int clientfd = accept( listenfd, (sockaddr*)&clientAddr, &addrSize );
-
-		if( -1 == clientfd )
-		{
-			perror( "accept() failed" );
-			continue; // attempt to accept a different client.
-		}
-
-#			if VERBOSE
-		// print some information about the new client
-		char buff[128];
-		printf( "Connection from %s:%d -> socket %d\n",
-				inet_ntop( AF_INET, &clientAddr.sin_addr, buff, sizeof(buff) ),
-				ntohs(clientAddr.sin_port),
-				clientfd
-			  );
-		fflush( stdout );
-#			endif
-
-#			if NONBLOCKING
-		// enable non-blocking sends and receives on this socket
-		if( !set_socket_nonblocking( clientfd ) )
+		fd_set readfds;
+		FD_ZERO(&readfds);
+		FD_SET(listenfd, &readfds);
+		int maxfd = listenfd;
+		int retval = select(maxfd + 1,  &readfds, NULL, NULL, NULL);
+		if (retval == -1) {
+			perror("select() failed");
 			continue;
-#			endif
-
-		// initialize connection data
-		ConnectionData connData;
-		memset( &connData, 0, sizeof(connData) );
-
-		connData.sock = clientfd;
-		connData.state = eConnStateReceiving;
-
-		// Repeatedly receive and re-send data from the connection. When
-		// the connection closes, process_client_*() will return false, no
-		// further processing is done.
-		bool processFurther = true;
-		while( processFurther )
-		{
-			while( processFurther && connData.state == eConnStateReceiving )
-				processFurther = process_client_recv( connData );
-
-			while( processFurther && connData.state == eConnStateSending )
-				processFurther = process_client_send( connData );
 		}
 
-		// done - close connection
-		close( connData.sock );
+		if (FD_ISSET(listenfd, &readfds)) {
+			if (!accept_connection(listenfd, connections)) {
+				continue;
+			}
+		}
+		/* // Repeatedly receive and re-send data from the connection. When */
+		/* // the connection closes, process_client_*() will return false, no */
+		/* // further processing is done. */
+		/* bool processFurther = true; */
+		/* while( processFurther ) */
+		/* { */
+		/* 	while( processFurther && connData.state == eConnStateReceiving ) */
+		/* 		processFurther = process_client_recv( connData ); */
+
+		/* 	while( processFurther && connData.state == eConnStateSending ) */
+		/* 		processFurther = process_client_send( connData ); */
+		/* } */
+
+		/* // done - close connection */
+		/* close( connData.sock ); */
 	}
 
 	// The program will never reach this part, but for demonstration purposes,
@@ -222,6 +204,47 @@ int main( int argc, char* argv[] )
 	close( listenfd );
 
 	return 0;
+}
+
+static bool accept_connection(int listenfd, std::vector<ConnectionData>& connections) {
+	sockaddr_in clientAddr;
+	socklen_t addrSize = sizeof(clientAddr);
+
+	// accept a single incoming connection
+	int clientfd = accept( listenfd, (sockaddr*)&clientAddr, &addrSize );
+
+	if( -1 == clientfd )
+	{
+		perror( "accept() failed" );
+		return false; // attempt to accept a different client.
+	}
+
+#			if VERBOSE
+	// print some information about the new client
+	char buff[128];
+	printf( "Connection from %s:%d -> socket %d\n",
+			inet_ntop( AF_INET, &clientAddr.sin_addr, buff, sizeof(buff) ),
+			ntohs(clientAddr.sin_port),
+			clientfd
+		  );
+	fflush( stdout );
+#			endif
+
+#			if NONBLOCKING
+	// enable non-blocking sends and receives on this socket
+	if( !set_socket_nonblocking( clientfd ) )
+		return false;
+#			endif
+
+	// initialize connection data
+	ConnectionData connData;
+	memset( &connData, 0, sizeof(connData) );
+
+	connData.sock = clientfd;
+	connData.state = eConnStateReceiving;
+
+	connections.push_back(connData);
+	return true;
 }
 
 //--    process_client_recv()   ///{{{1///////////////////////////////////////
