@@ -1,0 +1,63 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=3cm]{geometry}
+
+\begin{document}
+\section*{I.a.1 Two connections}
+Yes, a response is received immediately. It can also be seen from the server that two sockets are open and active.
+
+Output from \texttt{netstat -tulpan} (cropped to only display relevant information):
+\begin{verbatim}
+$ netstat -tulpan
+Proto Local Address           Foreign Address         State       PID/Program name
+tcp   0.0.0.0:5703            0.0.0.0:*               LISTEN      32682/./server
+tcp   127.0.0.1:5703          127.0.0.1:35946         ESTABLISHED 32682/./server
+tcp   127.0.0.1:5703          127.0.0.1:35948         ESTABLISHED 32682/./server
+tcp   127.0.0.1:35946         127.0.0.1:5703          ESTABLISHED 32767/./client-simp
+tcp   127.0.0.1:35948         127.0.0.1:5703          ESTABLISHED 395/./client-simple
+\end{verbatim}
+Here we can see that there are two entries in for each connection: one entry for the connection from the server to the client, and one entry for the connection from the client to the server. Both clients are in the state \texttt{ESTABLISHED}.
+
+\section*{I.a.2 Many connections, many messages}
+Below is the output from running the multi-client emulator against the new, concurrent server:
+\begin{verbatim}
+$ ./client-multi 0.0.0.0 5703 100 10000
+Simulating 100 clients.
+Establishing 100 connections...
+  successfully initiated 100 connection attempts!
+Connect timing results for 100 successful connections
+  - min time: 0.323411 ms
+  - max time: 1026.755559 ms
+  - average time: 711.368616 ms
+ (0 connections failed!)
+Roundtrip timing results for 100 connections for 10000 round trips
+  - min time: 3983.462368 ms
+  - max time: 6801.709983 ms
+  - average time: 5926.707653 ms
+\end{verbatim}
+This can be compared against the results for the simple iterative server:
+\begin{verbatim}
+$ ./client-multi 0.0.0.0 5703 100 10000
+# A lot of output like:
+#   - conn 82 : error in recv() : Connection reset by peer
+# ...
+Simulating 100 clients.
+Establishing 100 connections...
+  successfully initiated 100 connection attempts!
+Connect timing results for 100 successful connections
+  - min time: 0.941554 ms
+  - max time: 1027.920863 ms
+  - average time: 924.743276 ms
+ (0 connections failed!)
+Roundtrip timing results for 64 connections for 10000 round trips
+  - min time: 465.677006 ms
+  - max time: 108606.605993 ms
+  - average time: 33583.096821 ms
+\end{verbatim}
+We can see that the iterative server cannot even handle that many connections, for some reason, causing many of them to be reset. The number of measured roundtrip timings is just 64 out of 100.
+
+We can see that the concurrent server not only is able to handle all the connections, it is also capable of handling them much faster.
+
+\section*{I.a.3 Simple DoS attack}
+The simple attack that worked for the iterative server does not work for the concurrent server. The attack worked because a single client was causing all other clients to wait to be \texttt{accept()}:ed, but since we are now using \texttt{select()}, all those other clients can now establish a connection. This has been tested with our concurrent server, and the attack does not work.
+\end{document}

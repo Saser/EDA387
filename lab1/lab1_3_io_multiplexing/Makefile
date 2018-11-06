@@ -1,8 +1,8 @@
 FLAGS = -Wall -Wextra -g3
 
-all: server client-simple client-multi
+all: server client-simple client-multi multiplexing.pdf
 
-server: server-iterative.cpp
+server: server-concurrent.cpp
 	g++ $(FLAGS) $^ -o $@
 
 client-simple: client-simple.cpp
@@ -10,3 +10,6 @@ client-simple: client-simple.cpp
 
 client-multi: client-multi.cpp
 	g++ $(FLAGS) $^ -o $@
+
+multiplexing.pdf: multiplexing.tex
+	latexmk -pdf $<
